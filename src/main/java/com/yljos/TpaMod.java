@@ -1,6 +1,7 @@
 package com.yljos;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandSource;
@@ -84,6 +85,8 @@ public class TpaMod implements ModInitializer {
 
             // /tpa <player>
             dispatcher.register(CommandManager.literal("tpa")
+                    // Require permission, default fallback to level 0 (everyone) if no LuckPerms
+                    .requires(Permissions.require("tpa.command.tpa", 0))
                     // Use StringArgumentType to avoid target selectors
                     .then(CommandManager.argument("target", StringArgumentType.word())
                             .suggests((context, builder) -> {
@@ -105,6 +108,8 @@ public class TpaMod implements ModInitializer {
 
             // /sethome
             dispatcher.register(CommandManager.literal("sethome")
+                    // Require permission, default fallback to level 0 (everyone) if no LuckPerms
+                    .requires(Permissions.require("tpa.command.sethome", 0))
                     .executes(context -> {
                         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
                         HomeState state = HomeState.getServerState(player.getServer());
@@ -124,6 +129,8 @@ public class TpaMod implements ModInitializer {
 
             // /home
             dispatcher.register(CommandManager.literal("home")
+                    // Require permission, default fallback to level 0 (everyone) if no LuckPerms
+                    .requires(Permissions.require("tpa.command.home", 0))
                     .executes(context -> {
                         ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
                         HomeState state = HomeState.getServerState(player.getServer());
