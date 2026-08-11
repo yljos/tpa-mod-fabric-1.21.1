@@ -6,7 +6,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandSource;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.packet.s2c.play.TitleTextS2CPacket;
+import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -123,7 +123,7 @@ public class TpaMod implements ModInitializer {
                         // Mark dirty to save to NBT
                         state.markDirty();
                         
-                        player.networkHandler.sendPacket(new TitleTextS2CPacket(Text.literal("§aHome set.")));
+                        player.networkHandler.sendPacket(new TitleS2CPacket(Text.literal("§aHome set.")));
                         return 1;
                     }));
 
@@ -137,7 +137,7 @@ public class TpaMod implements ModInitializer {
                         HomeData home = state.homes.get(player.getUuid());
 
                         if (home == null) {
-                            player.networkHandler.sendPacket(new TitleTextS2CPacket(Text.literal("§cNo home.")));
+                            player.networkHandler.sendPacket(new TitleS2CPacket(Text.literal("§cNo home.")));
                             return 0;
                         }
 
