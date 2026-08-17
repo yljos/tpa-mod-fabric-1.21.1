@@ -83,12 +83,12 @@ public class TpaMod implements ModInitializer {
     public void onInitialize() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 
-            // /tpa <player>
+            // /tpa <player> or /tpa <x> <y> <z>
             dispatcher.register(CommandManager.literal("tpa")
                     // Require permission, default fallback to level 0 (everyone) if no LuckPerms
                     .requires(Permissions.require("tpa.command.tpa", 0))
-                    // Use StringArgumentType to avoid target selectors
-                    .then(CommandManager.argument("target", StringArgumentType.word())
+                    // Use greedyString to capture both single word (player) and space-separated words (coordinates)
+                    .then(CommandManager.argument("target", StringArgumentType.greedyString())
                             .suggests((context, builder) -> {
                                 // Filter out the command source
                                 String sourceName = context.getSource().getName();
@@ -99,10 +99,25 @@ public class TpaMod implements ModInitializer {
                             })
                             .executes(context -> {
                                 ServerPlayerEntity source = context.getSource().getPlayerOrThrow();
-                                String targetName = StringArgumentType.getString(context, "target");
-                                ServerPlayerEntity target = source.getServer().getPlayerManager().getPlayer(targetName);
+                                String input = StringArgumentType.getString(context, "target");
+                                ServerPlayerEntity target = source.getServer().getPlayerManager().getPlayer(input);
 
-                                teleportWithEffects(source, target.getServerWorld(), target.getPos(), target.getYaw(), target.getPitch());
+                                // If player exists, teleport to player
+                                if (target != null) {
+                                    teleportWithEffects(source, target.getServerWorld(), target.getPos(), target.getYaw(), target.getPitch());
+                                } else {
+                                    // If player does not exist, try parsing as coordinates
+                                    String[] parts = input.split("\\s+");
+                                    if (parts.length == 3) {
+                                        try {
+                                            double x = parseCoord(parts[0], source.getPos().x);
+                                            double y = parseCoord(parts[1], source.getPos().y);
+                                            double z = parseCoord(parts[2], source.getPos().z);
+                                            teleportWithEffects(source, source.getServerWorld(), new Vec3d(x, y, z), source.getYaw(), source.getPitch());
+                                        } catch (NumberFormatException ignored) {
+                                        }
+                                    }
+                                }
                                 return 1;
                             })));
 
@@ -148,6 +163,17 @@ public class TpaMod implements ModInitializer {
                         return 1;
                     }));
         });
+    }
+
+    // Parses coordinate string, supports relative '~' operator
+    private static double parseCoord(String input, double current) throws NumberFormatException {
+        if (input.equals("~")) {
+            return current;
+        } else if (input.startsWith("~")) {
+            return current + Double.parseDouble(input.substring(1));
+        } else {
+            return Double.parseDouble(input);
+        }
     }
 
     // Handles cross-dimension teleportation and visual/audio effects
